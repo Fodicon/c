@@ -1,116 +1,88 @@
-// Frank Poth 08/13/2017
-
-var context, controller, rectangle, loop;
-
-context = document.querySelector("canvas").getContext("2d");
-
-context.canvas.height = 180;
-context.canvas.width = 320;
-
-rectangle = {
-
-  height:32,
-  jumping:true,
-  width:32,
-  x:144, // center of the canvas
-  x_velocity:0,
-  y:0,
-  y_velocity:0
-
-};
-
-controller = {
-
-  left:false,
-  right:false,
-  up:false,
-  keyListener:function(event) {
-
-    var key_state = (event.type == "keydown")?true:false;
-
-    switch(event.keyCode) {
-
-      case 37:// left key
-        controller.left = key_state;
-      break;
-      case 38:// up key
-        controller.up = key_state;
-      break;
-      case 39:// right key
-        controller.right = key_state;
-      break;
-
+<canvas id="gc" width="800" height="600"></canvas>
+<script>
+px=py=200;
+xv=yv=0;
+grav=0.5;
+onG=false;
+holdLeft=holdRight=false; 
+plat=[];
+window.onload=function() {
+    canv=document.getElementById("gc");
+    ctx=canv.getContext("2d");
+    setInterval(update,1000/30);
+    document.addEventListener("keydown",keyDown);
+    document.addEventListener("keyup",keyUp);
+    for(i=0;i<50;i++) {
+        plat.push(
+        {
+        x:Math.random()*canv.width,
+        y:Math.random()*canv.height,
+        w:Math.random()*100+30,
+        h:Math.random()*30+20
+        }
+        );
     }
-
-  }
-
-};
-
-loop = function() {
-
-  if (controller.up && rectangle.jumping == false) {
-
-    rectangle.y_velocity -= 20;
-    rectangle.jumping = true;
-
-  }
-
-  if (controller.left) {
-
-    rectangle.x_velocity -= 0.5;
-
-  }
-
-  if (controller.right) {
-
-    rectangle.x_velocity += 0.5;
-
-  }
-
-  rectangle.y_velocity += 1.5;// gravity
-  rectangle.x += rectangle.x_velocity;
-  rectangle.y += rectangle.y_velocity;
-  rectangle.x_velocity *= 0.9;// friction
-  rectangle.y_velocity *= 0.9;// friction
-
-  // if rectangle is falling below floor line
-  if (rectangle.y > 180 - 16 - 32) {
-
-    rectangle.jumping = false;
-    rectangle.y = 180 - 16 - 32;
-    rectangle.y_velocity = 0;
-
-  }
-
-  // if rectangle is going off the left of the screen
-  if (rectangle.x < -32) {
-
-    rectangle.x = 320;
-
-  } else if (rectangle.x > 320) {// if rectangle goes past right boundary
-
-    rectangle.x = -32;
-
-  }
-
-  context.fillStyle = "#202020";
-  context.fillRect(0, 0, 320, 180);// x, y, width, height
-  context.fillStyle = "#ff0000";// hex for red
-  context.beginPath();
-  context.rect(rectangle.x, rectangle.y, rectangle.width, rectangle.height);
-  context.fill();
-  context.strokeStyle = "#202830";
-  context.lineWidth = 4;
-  context.beginPath();
-  context.moveTo(0, 164);
-  context.lineTo(320, 164);
-  context.stroke();
-
-  // call update when the browser is ready to draw again
-  window.requestAnimationFrame(loop);
-
-};
-
-window.addEventListener("keydown", controller.keyListener)
-window.addEventListener("keyup", controller.keyListener);
-window.requestAnimationFrame(loop);
+}
+function update() {
+    if(holdLeft) {
+        xv=-2;
+    }
+    if(holdRight) {
+        xv=2;
+    }
+    px+=xv;
+    py+=yv;
+    if(onG) {
+        xv *= 0.8;
+    } else {
+        yv += grav;
+    }
+ 
+    onG=false;
+    for(i=0;i<50;i++) {
+        if(px>plat[i].x && px<plat[i].x+plat[i].w &&
+            py>plat[i].y && py<plat[i].y+plat[i].h) {
+            py=plat[i].y;
+            onG=true;
+        }
+    }
+ 
+    ctx.fillStyle="black";
+    ctx.fillRect(0,0,canv.width,canv.height);
+    ctx.fillStyle="white";
+    ctx.fillRect(px-5,py-20,10,20);
+    for(i=0;i<50;i++) {
+        ctx.fillRect(plat[i].x,plat[i].y,plat[i].w,plat[i].h);
+    }
+}
+function keyDown(evt) {
+    switch(evt.keyCode) {
+        case 37:
+            holdLeft=true;
+            break;
+        case 38:
+            if(onG) {
+                yv=-10;
+            }
+            break;
+        case 39:
+            holdRight=true;
+            break;
+    }
+}
+function keyUp(evt) {
+    switch(evt.keyCode) {
+        case 37:
+            holdLeft=false;
+            break;
+        case 38:
+            if(yv<-3) {
+                yv=-3;
+            }
+            break;
+        case 39:
+            holdRight=false;
+            break;
+    }
+}
+</script>
